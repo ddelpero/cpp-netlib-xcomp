@@ -32,6 +32,7 @@
  */
 
 //#include <extcomp.he>
+#include "TMWorkQueue.he"
 #include "NVObjBase.he"
 #include "ThreadTimer.he"
 

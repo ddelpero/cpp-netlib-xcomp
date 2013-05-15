@@ -1,0 +1,45 @@
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+		 1000									"cpp-netlib"
+		 1001									"cpp-netlib"
+		 1004									"cpp-netlibHttpGetWorker: cpp-netlib http get object"
+		 //1004									"PostgreSQL Worker: PostgreSQL Worker object"
+
+		 // Object
+		 4000									"$error:$error(ErrorCode, ErrorDesc, ErrorText, MethodName) is called when an error has occurred. (Override to receive messages)"
+		 4001									"$initialize:$initialize initializes the object"
+		 4002									"$run:$run runs the task on the main thread"
+		 4003									"$start:$start runs the task on a background thread"
+		 4004									"$cancel:$cancel cancels the background thread"
+		 4005									"$done:$done called when task is done."
+
+		 // PostgreSQL Worker Object
+		 //4000									"$error:$error(ErrorCode, ErrorDesc, ErrorText, MethodName) is called when an error has occurred. (Override to receive messages)"
+		 //4001									"$initialize:$initialize initializes the object"
+		 //4002									"$run:$run runs the task on the main thread"
+		 //4003									"$start:$start runs the task on a background thread"
+		 //4004									"$cancel:$cancel cancels the background thread"
+
+		 4900									"ErrorCode"
+		 4901									"ErrorDesc"
+		 4902									"ErrorText"
+		 4903									"MethodName"
+		 4904									"Number"
+
+
+		
+        // Constants
+		//23000									"kTMTask"
+		//23001									"Category~MyConstant:0:MyConstant:Description of my constant"
+		
+		23100									"Errors~ErrNone:0:ErrNone:No error"
+		23101									"ErrBadMethod:-101:ErrBadMethod:Bad method index (internal error)"
+		23102									"ErrBadParams:-102:ErrBadParams:Invalid or invalid number of paramters have been passed to the method"
+		23103									"ErrMemory:-103:ErrMemory:Out of memory"
+		23104									"ErrNotSupported:-104:ErrNotSupported:The feature is not supported"
+		 
+		31000									"NVObjWndProc"
+END
+
+

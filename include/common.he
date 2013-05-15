@@ -1,0 +1,27 @@
+
+
+#ifndef COMMON_HE_
+#define COMMON_HE_
+
+#include "NVObjBase.he"
+//#include <extcomp.he>
+#include "ThreadTimer.he"
+#include <boost/make_shared.hpp>
+#include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/format.hpp>
+#include "Worker.h"
+
+
+using boost::format;
+using namespace OmnisTools;
+
+
+bool getParamsFromRow(tThreadData* pThreadData, EXTfldval& row, Worker::ParamMap& params);
+bool getRowFromParams(EXTfldval& row, Worker::ParamMap& params);
+EXTqlist* getListFromParams(Worker::ParamMap& params, std::string paramName);
+
+BOOL FileExists(LPCTSTR szPath);
+std::string getStringFromParam(Worker::ParamMap& params, std::string paramName);
+
+#endif // COMMON_HE_

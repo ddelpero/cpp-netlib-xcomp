@@ -36,7 +36,7 @@
 #define NV_OBJ_BASE_HE_
 
 //#include <extcomp.he>
-#include "TMWorkQueue.he"
+//#include "TMWorkQueue.he"
 #include "OmnisTools.he"
 
 class ThreadTimer;  // Forward declare to avoid circular references -- ThreadTimer.he

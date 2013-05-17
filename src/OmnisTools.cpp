@@ -346,7 +346,7 @@ void OmnisTools::getEXTFldValFromChar(EXTfldval& fVal, const char* readChar) {
 
 // Get a dynamically allocated qchar* array from a std::string
 qchar* OmnisTools::getQCharFromString(const std::string readString, qlong &retLength) {
-	 retLength = readString.size();
+	 qlong length = readString.size();
 	
 	// Cast-away constness of c_str() pointer 
 	char* cString = const_cast<char*>(readString.c_str());
@@ -355,12 +355,13 @@ qchar* OmnisTools::getQCharFromString(const std::string readString, qlong &retLe
 	qbyte* utf8data = reinterpret_cast<qbyte*> (cString);
 	
 	// Allocate new qchar* string
-	qchar* omnisString = new qchar[retLength+1];
+	qchar* omnisString = new qchar[length+1];
 	
 #ifdef isunicode
 	// Convert to Omnis Character field
 	retLength = CHRunicode::utf8ToChar(utf8data, length, omnisString);  // Convert characters into Omnis Char Field
 #else
+	retLength = length;
 	strcpy((char*)omnisString, (const char*)utf8data);
 #endif
 	return omnisString;

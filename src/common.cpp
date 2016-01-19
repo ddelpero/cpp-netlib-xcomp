@@ -4,6 +4,10 @@
  **                              PARAM CONVERSION                                                **
  **************************************************************************************************/
 
+concurrent_queue<int> queue_to_studio;
+concurrent_queue<int> queue_from_studio;
+
+
 bool getParamsFromRow(tThreadData* pThreadData, EXTfldval& row, Worker::ParamMap& params) {
     
     if(getType(row).valType != fftRow && getType(row).valType != fftList) {

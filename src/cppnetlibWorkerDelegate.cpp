@@ -63,7 +63,9 @@ Worker::ParamMap cppnetlibDelegate::run(Worker::ParamMap& params){
 	try {
 		http::client::request request_(url);
 		request_ << header("Connection", "close");
-		http::client client_(http::_follow_redirects=true, http::_cache_resolved=true);
+		http::client::options options;
+		options.follow_redirects(true).cache_resolved(true);
+		http::client client_; //(/*options*/);
 		http::client::response response_ = client_.get(request_);
 		std::string body_ = http::body(response_);
 

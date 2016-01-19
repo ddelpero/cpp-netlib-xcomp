@@ -7,7 +7,7 @@
 //
 
 //#include <extcomp.he>
-#include "NVObjWorker.he"
+#include "NVObjHTTPServerWorker.he"
 #include "ThreadTimer.he"
 #include "Logging.he"
 #include "common.he"
@@ -17,6 +17,9 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/format.hpp>
 
+extern concurrent_queue<int> queue_to_studio;
+extern concurrent_queue<int> queue_from_studio;
+
 using boost::format;
 using namespace OmnisTools;
 
@@ -25,16 +28,15 @@ using namespace OmnisTools;
  **************************************************************************************************/
 
 // Constructor
-NVObjWorker::NVObjWorker(qobjinst objinst, tThreadData* pThreadData) : NVObjBase(objinst) {
-	
+NVObjHTTPServerWorker::NVObjHTTPServerWorker(qobjinst objinst, tThreadData* pThreadData) : NVObjBase(objinst) {
+
 }
 
 // Destructor
-NVObjWorker::~NVObjWorker() {    
+NVObjHTTPServerWorker::~NVObjHTTPServerWorker() {    
     // Unsubscribe this instance from the timer
     ThreadTimer& timerInst = ThreadTimer::instance();
     timerInst.unsubscribe(this);
-	message_queue::remove("mq");
 }
 
 /**************************************************************************************************
@@ -54,14 +56,15 @@ const static qshort cMethodError      = 4000,
                     cMethodRun        = 4002,
                     cMethodStart      = 4003,
                     cMethodCancel     = 4004,
-					cMethodDone       = 4005;
+					cMethodDone       = 4005,
+					cMethodHTTPRequest = 4006;
 
 /**************************************************************************************************
  **                                 INSTANCE METHODS                                             **
  **************************************************************************************************/
 
 // Call a method
-qlong NVObjWorker::methodCall( tThreadData* pThreadData )
+qlong NVObjHTTPServerWorker::methodCall( tThreadData* pThreadData )
 {
 	tResult result = METHOD_OK;
 	qshort funcId = (qshort)ECOgetId(pThreadData->mEci);
@@ -92,6 +95,9 @@ qlong NVObjWorker::methodCall( tThreadData* pThreadData )
             pThreadData->mCurMethodName = "$done";
             result = methodCancel(pThreadData, paramCount);
             break;
+		case cMethodHTTPRequest:
+			pThreadData->mCurMethodName = "$httpRequest";
+            result = methodCancel(pThreadData, paramCount);
 	}
 	
 	callErrorMethod(pThreadData, result);
@@ -104,7 +110,7 @@ qlong NVObjWorker::methodCall( tThreadData* pThreadData )
  **************************************************************************************************/
 
 // Assignability of properties
-qlong NVObjWorker::canAssignProperty( tThreadData* pThreadData, qlong propID ) {
+qlong NVObjHTTPServerWorker::canAssignProperty( tThreadData* pThreadData, qlong propID ) {
 	switch (propID) {
 		case cPropertyMyProperty:
 			return qtrue;
@@ -114,7 +120,7 @@ qlong NVObjWorker::canAssignProperty( tThreadData* pThreadData, qlong propID ) {
 }
 
 // Method to retrieve a property of the object
-qlong NVObjWorker::getProperty( tThreadData* pThreadData ) 
+qlong NVObjHTTPServerWorker::getProperty( tThreadData* pThreadData ) 
 {
 	EXTfldval fValReturn;
     
@@ -130,7 +136,7 @@ qlong NVObjWorker::getProperty( tThreadData* pThreadData )
 }
 
 // Method to set a property of the object
-qlong NVObjWorker::setProperty( tThreadData* pThreadData )
+qlong NVObjHTTPServerWorker::setProperty( tThreadData* pThreadData )
 {
 	// Retrieve value to set for property, always in first parameter
 	EXTfldval fVal;
@@ -163,7 +169,7 @@ qlong NVObjWorker::setProperty( tThreadData* pThreadData )
 // 2) Return type (fft value)
 // 3) Parameter flags of type EXTD_FLAG_xxxx
 // 4) Extended flags.  Documentation states, "Must be 0"
-ECOparam cFileCopyWorkerMethodsParamsTable[] = 
+ECOparam cHTTPServerWorkerMethodsParamsTable[] = 
 {
 	4900, fftInteger  , 0, 0,
 	4901, fftCharacter, 0, 0,
@@ -180,22 +186,23 @@ ECOparam cFileCopyWorkerMethodsParamsTable[] =
 // 5) Array of Parameter Names (Taken from MethodsParamsTable.  Increments # of parameters past this pointer) 
 // 6) Enum Start (Not sure what this does, 0 = disabled)
 // 7) Enum Stop (Not sure what this does, 0 = disabled)
-ECOmethodEvent cFileCopyWorkerMethodsTable[] = 
+ECOmethodEvent cHTTPServerWorkerMethodsTable[] = 
 {
-	cMethodError,      cMethodError,      fftNumber,  4, &cFileCopyWorkerMethodsParamsTable[0], 0, 0,
+	cMethodError,      cMethodError,      fftNumber,  4, &cHTTPServerWorkerMethodsParamsTable[0], 0, 0,
 	cMethodInitialize, cMethodInitialize, fftBoolean, 0,                               0, 0, 0,
     cMethodRun,        cMethodRun,        fftNone,    0,                               0, 0, 0,
     cMethodStart,      cMethodStart,      fftNone,    0,                               0, 0, 0,
     cMethodCancel,     cMethodCancel,     fftNone,    0,                               0, 0, 0,
-	cMethodDone,	   cMethodDone,       fftNone,    0,                               0, 0, 0
+	cMethodDone,	   cMethodDone,       fftNone,    0,                               0, 0, 0,
+	cMethodHTTPRequest, cMethodHTTPRequest, fftNone,  0,							   0, 0, 0, 
 };
 
 // List of methods in Simple
-qlong NVObjWorker::returnMethods(tThreadData* pThreadData)
+qlong NVObjHTTPServerWorker::returnMethods(tThreadData* pThreadData)
 {
-	const qshort cMethodCount = sizeof(cFileCopyWorkerMethodsTable) / sizeof(ECOmethodEvent);
+	const qshort cMethodCount = sizeof(cHTTPServerWorkerMethodsTable) / sizeof(ECOmethodEvent);
 	
-	return ECOreturnMethods( gInstLib, pThreadData->mEci, &cFileCopyWorkerMethodsTable[0], cMethodCount );
+	return ECOreturnMethods( gInstLib, pThreadData->mEci, &cHTTPServerWorkerMethodsTable[0], cMethodCount );
 }
 
 /* PROPERTIES */
@@ -209,24 +216,24 @@ qlong NVObjWorker::returnMethods(tThreadData* pThreadData)
 // 5) Additional Flags describing the property
 // 6) Enum Start (Not sure what this does, 0 = disabled)
 // 7) Enum Stop (Not sure what this does, 0 = disabled)
-ECOproperty cFileCopyWorkerPropertyTable[] = 
+ECOproperty cHTTPServerWorkerPropertyTable[] = 
 {
 	cPropertyMyProperty, cPropertyMyProperty, fftInteger, EXTD_FLAG_PROPCUSTOM, 0, 0, 0 /* Shows under Custom category */
 };
 
 // List of properties in Simple
-qlong NVObjWorker::returnProperties( tThreadData* pThreadData )
+qlong NVObjHTTPServerWorker::returnProperties( tThreadData* pThreadData )
 {
-	const qshort propertyCount = sizeof(cFileCopyWorkerPropertyTable) / sizeof(ECOproperty);
+	const qshort propertyCount = sizeof(cHTTPServerWorkerPropertyTable) / sizeof(ECOproperty);
     
-	return ECOreturnProperties( gInstLib, pThreadData->mEci, &cFileCopyWorkerPropertyTable[0], propertyCount );
+	return ECOreturnProperties( gInstLib, pThreadData->mEci, &cHTTPServerWorkerPropertyTable[0], propertyCount );
 }
 
 /**************************************************************************************************
  **                       THREAD TIMER NOTIFIER                                                  **
  **************************************************************************************************/
 
-int NVObjWorker::notify() 
+int NVObjHTTPServerWorker::notify() 
 {        
     if(_worker->complete()) {
         // Worker completed.  Call back into Omnis
@@ -243,7 +250,31 @@ int NVObjWorker::notify()
         ECOdoMethod( this->getInstance(), &methodName, 0, 0 );
         
         return ThreadTimer::kTimerStop;
-    }
+	} else if (queue_to_studio.empty() == false) {
+		int val, methodRetLongVal;
+		EXTfldval methodParam;
+		EXTfldval methodRetVal;
+
+		queue_to_studio.try_pop(val);
+		methodParam.setNum(val);
+		str255 methodName("$httpRequest");
+
+		EXTCompInfo* eci = new EXTCompInfo();
+		eci->mParamFirst = 0;
+		// Add parameters to EXTCompInfo structure
+		ECOaddParam(eci,&methodRetVal, 0,0,0,0,0); //return value
+		ECOaddParam(eci,&methodParam,0,0,0,1,0); // param 1
+
+		ECOdoMethodECI( this->getInstance(), &methodName,eci, qtrue);
+		std::string str = getStringFromEXTFldVal(methodRetVal);
+		int new_val = 123456;
+		queue_from_studio.push(new_val);
+		
+		// Delete parameters from EXTCompInfo structure
+		ECOmemoryDeletion( eci );
+		// Delete eci structure
+		delete eci;
+	}
     
     return ThreadTimer::kTimerContinue;
 }
@@ -253,7 +284,7 @@ int NVObjWorker::notify()
  **************************************************************************************************/
 
 // Initialize the worker
-tResult NVObjWorker::methodInitialize( tThreadData* pThreadData, qshort pParamCount )
+tResult NVObjHTTPServerWorker::methodInitialize( tThreadData* pThreadData, qshort pParamCount )
 {    
     EXTfldval rowVal;
     if (getParamVar(pThreadData,1,rowVal) == qfalse) {
@@ -269,9 +300,10 @@ tResult NVObjWorker::methodInitialize( tThreadData* pThreadData, qshort pParamCo
     }
     
     // Create new worker object
-    _worker = boost::make_shared<Worker>(params,boost::make_shared<cppnetlibDelegate>());
+    _worker = boost::make_shared<Worker>(params,boost::make_shared<cppnetlibHTTPServerDelegate>());
     
     // Call all worker initialization code while on main thread
+	_worker->setObjInst(this);
     _worker->init();
     
     EXTfldval retVal;
@@ -281,7 +313,7 @@ tResult NVObjWorker::methodInitialize( tThreadData* pThreadData, qshort pParamCo
 	return METHOD_DONE_RETURN;
 }
 
-tResult NVObjWorker::methodRun( tThreadData* pThreadData, qshort pParamCount )
+tResult NVObjHTTPServerWorker::methodRun( tThreadData* pThreadData, qshort pParamCount )
 {
     if( _worker == boost::shared_ptr<Worker>() ) {
         return ERR_METHOD_FAILED;
@@ -296,7 +328,7 @@ tResult NVObjWorker::methodRun( tThreadData* pThreadData, qshort pParamCount )
 	return METHOD_DONE_RETURN;
 }
 
-tResult NVObjWorker::methodStart( tThreadData* pThreadData, qshort pParamCount )
+tResult NVObjHTTPServerWorker::methodStart( tThreadData* pThreadData, qshort pParamCount )
 {
     if( _worker == boost::shared_ptr<Worker>() ) {
         return ERR_METHOD_FAILED;
@@ -311,7 +343,7 @@ tResult NVObjWorker::methodStart( tThreadData* pThreadData, qshort pParamCount )
 	return METHOD_DONE_RETURN;
 }
 
-tResult NVObjWorker::methodCancel( tThreadData* pThreadData, qshort pParamCount )
+tResult NVObjHTTPServerWorker::methodCancel( tThreadData* pThreadData, qshort pParamCount )
 {
     if( _worker == boost::shared_ptr<Worker>() ) {
         return ERR_METHOD_FAILED;

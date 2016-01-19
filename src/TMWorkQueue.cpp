@@ -39,6 +39,7 @@
 #include "Logging.he"
 #include "Static.he"
 #include "NVObjWorker.he"
+#include "NVObjHTTPServerWorker.he"
 #include "TMWorkQueue.he"
 
 using OmnisTools::tThreadData;
@@ -48,7 +49,7 @@ using OmnisTools::tThreadData;
 
 // Version Information
 // 1.0 -- Adapted from Generic
-#define VERSION_MAJOR 1
+#define VERSION_MAJOR 2
 #define VERSION_MINOR 0
 
 // Resources for constants
@@ -62,13 +63,15 @@ const static qshort cNVObjGroup = 1001;
 // Resource # for objects.  In this project it is also the Unique ID; when an object is called mCompId will equal this.
 const qshort /*cNVObjSimple = 1002,*/
              //cNVObjWorker  = 1004;
-             cNVObjPostgreSQLWorker = 1004;
+             cNVObjPostgreSQLWorker = 1004,
+			 cNVObjHTTPServerWorker = 1005;
 
 // Set static id's for matching classes (This is used for creating new objects without needing to know the Omnis ID. See: OmnisTools::createNVObj() )
 //qshort NVObjSimple::objResourceId = cNVObjSimple;
 //qshort NVObjQueue::objResourceId  = cNVObjQueue;
 //qshort NVObjWorker::objResourceId = cNVObjWorker;
 qshort NVObjWorker::objResourceId = cNVObjPostgreSQLWorker;
+qshort NVObjHTTPServerWorker::objResourceId = cNVObjHTTPServerWorker;
 
 // Omnis objects contained within this component.
 // Columns are:
@@ -81,7 +84,7 @@ ECOobject objectsTable[] =
 	/*cNVObjSimple, cNVObjSimple, 0, cNVObjGroup,
     cNVObjQueue, cNVObjQueue, 0, cNVObjGroup,*/
 	cNVObjPostgreSQLWorker, cNVObjPostgreSQLWorker, 0, cNVObjGroup
-	//,cNVObjPostgreSQLWorker, cNVObjPostgreSQLWorker, 0, cNVObjGroup
+	,cNVObjHTTPServerWorker, cNVObjHTTPServerWorker, 0, cNVObjGroup
 };
 
 const qshort cObjCount = sizeof(objectsTable) / sizeof(ECOobject); // Number of Omnis objects in this component
@@ -95,8 +98,8 @@ NVObjBase* createObject( qlong propID, qobjinst objinst, tThreadData *pThreadDat
             return new NVObjQueue(objinst, pThreadData);*/
 		case cNVObjPostgreSQLWorker:
 			return new NVObjWorker(objinst, pThreadData);
-        /*case cNVObjPostgreSQLWorker:
-            return new NVObjPostgreSQLWorker(objinst, pThreadData);*/
+        case cNVObjHTTPServerWorker:
+            return new NVObjHTTPServerWorker(objinst, pThreadData);
 		default: 
 			return 0;
 	}
@@ -116,9 +119,9 @@ void copyObject( qlong propID, objCopyInfo* copyInfo, tThreadData *pThreadData )
 		case cNVObjPostgreSQLWorker:
 			copyNVObj<NVObjWorker>(propID, copyInfo, pThreadData);
 			break;
-        /*case cNVObjPostgreSQLWorker:
-            copyNVObj<NVObjPostgreSQLWorker>(propID, copyInfo, pThreadData);
-            break;*/
+        case cNVObjHTTPServerWorker:
+            copyNVObj<NVObjHTTPServerWorker>(propID, copyInfo, pThreadData);
+            break;
         default:
             break;
     }
@@ -137,9 +140,9 @@ void removeObject( qlong propID, NVObjBase* nvObj ) {
 			delete (NVObjWorker*)nvObj;
 			nvObj = NULL;
 			break;
-        /*case cNVObjPostgreSQLWorker:
-			delete (NVObjPostgreSQLWorker*)nvObj;
-			break;*/
+        case cNVObjHTTPServerWorker:
+			delete (NVObjHTTPServerWorker*)nvObj;
+			break;
 		default:
 			break;
 	}

@@ -15,11 +15,13 @@ using boost::format;
 
 Worker::Worker() : _complete(false), _running(false), _cancelled(false) 
 {
+	_http_request = false;
 }
 
 Worker::Worker(const ParamMap& p, const boost::shared_ptr<WorkerDelegate>& d) 
 : _params(p), _delegate(d), _complete(false), _running(false), _cancelled(false) 
 {
+	_http_request = false;
 }
 
 Worker::Worker(const Worker& w)
@@ -34,11 +36,22 @@ Worker::Worker(const Worker& w)
     
     _queue = w._queue; 
     _delegate = w._delegate;
+
+	_http_request = false;
 } 
 
 Worker::~Worker() {
     cancel();
     //_thread.join();  // Don't destruct objects until thread has finished
+}
+
+
+void Worker::callStudio()
+{
+	str255 methodName("$httpRequest");
+	qret ret;
+	qobjinst qobj = _object->getInstance();
+	ret = ECOdoMethod( qobj, &methodName, 0, 0);
 }
 
 // Description of object used for logging
@@ -195,12 +208,17 @@ void Worker::WorkerThread::operator()() {
         params = ptr->_params;
         
         // Release shared pointer prior to starting logic (otherwise it holds a reference and prevents worker destruct)
-        ptr.reset(); 
+        
     }
     
     // Perform worker work
+	_delegate->setWorker(ptr);
     Worker::ParamMap result = _delegate->run(params); 
     
+	if (ptr != NULL){
+		ptr.reset(); 
+	}
+
     // Re-acquire shared pointer
     try { 
         ptr = _worker.lock();

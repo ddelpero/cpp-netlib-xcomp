@@ -4,6 +4,7 @@ BEGIN
 		 1000									"cpp-netlib"
 		 1001									"cpp-netlib"
 		 1004									"cpp-netlibHttpGetWorker: cpp-netlib http get object"
+		 1005									"cpp-netlibHttpServerWorker: cpp-netlib http server object"
 		 //1004									"PostgreSQL Worker: PostgreSQL Worker object"
 
 		 // Object
@@ -13,6 +14,7 @@ BEGIN
 		 4003									"$start:$start runs the task on a background thread"
 		 4004									"$cancel:$cancel cancels the background thread"
 		 4005									"$done:$done called when task is done."
+		 4006									"$httpRequest:$httpRequest called on client request."
 
 		 // PostgreSQL Worker Object
 		 //4000									"$error:$error(ErrorCode, ErrorDesc, ErrorText, MethodName) is called when an error has occurred. (Override to receive messages)"
